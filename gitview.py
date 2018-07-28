@@ -118,3 +118,36 @@ class Repo():
 
     # TODO: 
     # Visualize 
+
+
+from PyQt5.QtGui import QIcon, QPixmap, QColor
+from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout, QPushButton)
+
+qt_app = QApplication(sys.argv)
+
+class GitviewGui(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        self.setWindowTitle("Gitview")
+        self.setMinimumWidth(400)
+
+        self.hlayout = QHBoxLayout()
+        self.vlayout = QVBoxLayout()
+        self.hlayout.addLayout(self.vlayout)
+        
+        self.button1 = QPushButton("&Button1", self)
+        self.button2 = QPushBUtton("&Button2", self)
+
+        pixmap = QPixMap()
+        pixmap.fill(QColor("red"))
+        self.button1.setPixmap(pixmap)
+        pixmap.fill(QColor("blue"))
+        self.button2.setPixmap(pixmap) 
+
+        self.vlayout.add(self.button1)
+        self.vlayout.add(self.button2)
+
+    def run(self):
+        self.show()
+        qt.app.exec()
+
