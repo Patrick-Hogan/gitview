@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 Created: 2018-07-24
-Author: Patrick Hogan 
+Author: Patrick Hogan
 """
 
 import os
 from subprocess import getstatusoutput as run
 
-
 class Repo():
-    
+
     def __init__(self, git_dir=None):
         self.refs = dict()
         self.commits = dict()
 
-        if git_dir is None: 
+        if git_dir is None:
             cmd = 'git rev-parse --git-dir'
         else:
             cmd = 'git --git-dir={0} rev-parse --git-dir'.format(git_dir)
@@ -25,21 +24,21 @@ class Repo():
         if status != 0:
             msg = ('Cannot locate git-dir. Run from inside a git repo '
                   'or initialize with git-dir!')
-            raise Exception(msg) 
+            raise Exception(msg)
 
         self.git_dir = git_dir
         self.git = 'git --git-dir={0}'.format(git_dir)
 
         self.add_refs()
         self.add_commits()
-    
+
     def add_refs(self):
         cmd = '{0} rev-parse --symbolic-full-name --all'.format(self.git)
         (status, refs) = run(cmd)
         if status != 0:
             msg = 'Unable to retreive ref names.'
             raise Exception(msg)
-        for ref in refs.split(): 
+        for ref in refs.split():
             parts = ref.split('/')[1:]
             ref_type = parts[0]
             ref_name = '/'.join(parts[1:])
@@ -50,8 +49,8 @@ class Repo():
                 cmd = '{0} rev-parse {1}'.format(self.git, '{0}')
             else:
                 print("Warning: ref type not recognized: {0}".format(ref))
-                continue 
-            (status, commits) = run(cmd.format(ref)) 
+                continue
+            (status, commits) = run(cmd.format(ref))
             if status != 0:
                 print("Unable to get commit(s) for {0}".format(name))
                 continue
@@ -73,7 +72,7 @@ class Repo():
                 print("Unable to obtain commit: {0}".format(sha))
                 return None
             self.sha = sha
-            lines = gitlog.split('\n') 
+            lines = gitlog.split('\n')
             self.Author = lines[1].split(':')[1].strip()
             self.AuthorDate = lines[2].split(':')[1].strip()
             self.Commit = lines[3].split(':')[1].strip()
@@ -94,14 +93,14 @@ class Repo():
 
         def __repr(self):
             return self.__str__()
-        
+
     def add_commits(self):
-        cmd = '{0} show --pretty=fuller --no-patch'.format(self.git) 
+        cmd = '{0} show --pretty=fuller --no-patch'.format(self.git)
         for ref_type in self.refs.keys():
             for ref_name, shas in self.refs[ref_type].items():
                 for sha in shas:
                     if sha in self.commits:
-                        continue 
+                        continue
                     self.commits[sha] = self.Commit(self.git_dir, sha)
 
     def __str__(self):
@@ -110,44 +109,16 @@ class Repo():
             for name in ref_names:
                 refs.append('{0}/{1}'.format(ref_type, name))
         lines = ['Git Repository: {0}'.format(self.git_dir)]
-        lines.extend(['    {0}'.format(ref) for ref in refs]) 
+        lines.extend(['    {0}'.format(ref) for ref in refs])
         return ('\n'.join(lines))
 
     def __repr__(self):
         return self.__str__()
 
-    # TODO: 
-    # Visualize 
-
-
-from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout, QPushButton)
-
-qt_app = QApplication(sys.argv)
-
-class GitviewGui(QWidget):
-    def __init__(self):
-        QWidget.__init__(self)
-        self.setWindowTitle("Gitview")
-        self.setMinimumWidth(400)
-
-        self.hlayout = QHBoxLayout()
-        self.vlayout = QVBoxLayout()
-        self.hlayout.addLayout(self.vlayout)
-        
-        self.button1 = QPushButton("&Button1", self)
-        self.button2 = QPushBUtton("&Button2", self)
-
-        pixmap = QPixMap()
-        pixmap.fill(QColor("red"))
-        self.button1.setPixmap(pixmap)
-        pixmap.fill(QColor("blue"))
-        self.button2.setPixmap(pixmap) 
-
-        self.vlayout.add(self.button1)
-        self.vlayout.add(self.button2)
-
-    def run(self):
-        self.show()
-        qt.app.exec()
-
+if __name__ == "__main__":
+    from gitview_gui import GitviewGui
+    repo = Repo()
+    gui = GitviewGui()
+    for reftype, reflist in repo.refs.items():
+        gui.draw_branch(reflist)
+    gui.run()
